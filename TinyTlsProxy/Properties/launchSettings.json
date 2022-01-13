@@ -1,0 +1,11 @@
+{
+	"profiles": {
+		"TlsProxy": {
+			"commandName": "Project",
+			"commandLineArgs": "-toTLS TLS10-TLS12 880:httpbin.org:443 -t 10 -d"
+			//"commandLineArgs": "-fromTLS TLS12-TLS12 4443:httpbin.org:80 -c Properties/localhost.pfx -t 10 -v"
+			//"commandLineArgs": "-toSMTP - 587:smtp.office365.com:587 -toTLS - 993:outlook.office365.com:993 -t 7 -d"
+			//"commandLineArgs": "-fromTLS - 10025:courier.local:25 -c Properties/localhost.pfx -d -t 7"
+		}
+	}
+}

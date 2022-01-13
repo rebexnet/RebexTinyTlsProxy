@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>RebexTinyTlsProxy</AssemblyName>
+    <TargetFramework>net40</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Rebex.TinyTlsProxy</RootNamespace>
+    <ApplicationIcon>Resources\TinyTlsProxy.ico</ApplicationIcon>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Version>1.0.0</Version>
+    <Product>Rebex Tiny TLS PRoxy</Product>
+    <Company>Rebex CR, s.r.o.</Company>
+    <Description>TODO</Description>
+    <Copyright>Copyright (c) 2019-2022 Rebex CR, s.r.o.</Copyright>
+    <PackageProjectUrl>https://www.rebex.net/tls-proxy/</PackageProjectUrl>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\TinyTlsProxy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Rebex.Elliptic.Castle" Version="1.2.1" />
+    <PackageReference Include="Rebex.Elliptic.Curve25519" Version="1.2.1" />
+    <PackageReference Include="Rebex.Tls" Version="6.0.8000" />
+    <PackageReference Include="Rebex.Networking" Version="6.0.8000" />
+    <PackageReference Include="Rebex.Common" Version="6.0.8000" />
+  </ItemGroup>
+</Project>
