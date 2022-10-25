@@ -13,6 +13,8 @@ namespace Rebex.Proxy
 	public class Tunnel
 	{
 		private const int BUFFER_SIZE = 64 * 1024;
+		private static readonly TimeSpan CLOSE_TIMEOUT = TimeSpan.FromSeconds(5);
+		private static readonly TimeSpan CLOSE_FAST_TIMEOUT = TimeSpan.FromMilliseconds(500);
 
 		private static int _nextId;
 
@@ -23,6 +25,8 @@ namespace Rebex.Proxy
 
 		private IDataProvider _inbound;
 		private IDataProvider _outbound;
+		private ManualResetEventSlim _inForwarder;
+		private ManualResetEventSlim _outForwarder;
 		private bool _isClosed;
 
 		private bool IsStopped { get { return _isClosed || _cancellation.IsCancellationRequested; } }
@@ -91,7 +95,7 @@ namespace Rebex.Proxy
 			Log(LogLevel.Debug, $"Tunnel established ({InboundEndpoint}) --'{insecurity}'--> ({Binding.SourcePort}) --'{outsecurity}'--> ({OutboundEndpoint}).");
 		}
 
-		public void Close()
+		public void Close(bool fast)
 		{
 			lock (_sync)
 			{
@@ -105,7 +109,7 @@ namespace Rebex.Proxy
 
 			try
 			{
-				_inbound?.Close();
+				_inbound?.Close(_inForwarder, fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT);
 			}
 			catch (Exception ex)
 			{
@@ -114,12 +118,18 @@ namespace Rebex.Proxy
 
 			try
 			{
-				_outbound?.Close();
+				_outbound?.Close(_outForwarder, fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT);
 			}
 			catch (Exception ex)
 			{
 				Log(LogLevel.Debug, "Error while closing outbound tunnel: {0}", ex);
 			}
+
+			try { _inForwarder?.Dispose(); }
+			catch { }
+
+			try { _outForwarder?.Dispose(); }
+			catch { }
 
 			OnClosing?.Invoke(Id);
 		}
@@ -128,13 +138,13 @@ namespace Rebex.Proxy
 		{
 			if (!IsStopped)
 			{
-				_inbound.BeginReceive(GetReadCallback(_inbound, _outbound));
-				_outbound.BeginReceive(GetReadCallback(_outbound, _inbound));
+				_inbound.BeginReceive(GetReadCallback(_inbound, _outbound, _inForwarder = new ManualResetEventSlim(false)));
+				_outbound.BeginReceive(GetReadCallback(_outbound, _inbound, _outForwarder = new ManualResetEventSlim(false)));
 			}
 		}
 
 
-		private AsyncCallback GetReadCallback(IDataProvider reader, IDataProvider writer)
+		private AsyncCallback GetReadCallback(IDataProvider reader, IDataProvider writer, ManualResetEventSlim _forwarderDone)
 		{
 			AsyncCallback callback = null;
 			callback = ar =>
@@ -179,7 +189,8 @@ namespace Rebex.Proxy
 				{
 					if (close)
 					{
-						Close();
+						_forwarderDone.Set();
+						Close(fast: false);
 					}
 				}
 			};

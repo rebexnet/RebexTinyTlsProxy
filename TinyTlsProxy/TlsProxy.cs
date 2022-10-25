@@ -120,6 +120,8 @@ namespace Rebex.Proxy
 		{
 			try
 			{
+				Log(LogLevel.Info, "Stopping proxy ...");
+
 				foreach (var listener in _listeners.Values)
 				{
 					try { listener.Close(); }
@@ -131,7 +133,7 @@ namespace Rebex.Proxy
 				{
 					foreach (var tunnel in _tunnels.Values)
 					{
-						try { tunnel.Close(); }
+						try { tunnel.Close(fast: true); }
 						catch { } // we are stopping TLS proxy, we don't need to process close exceptions
 					}
 					_tunnels.Clear();
@@ -140,6 +142,8 @@ namespace Rebex.Proxy
 			finally
 			{
 				_cancellation = null;
+
+				Log(LogLevel.Info, "Proxy stopped.");
 			}
 		}
 
@@ -244,7 +248,7 @@ namespace Rebex.Proxy
 					inboundSocket.Close();
 
 				if (close && tunnel != null)
-					tunnel.Close();
+					tunnel.Close(fast: true);
 			}
 		}
 
