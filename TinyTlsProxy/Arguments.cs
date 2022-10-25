@@ -46,18 +46,18 @@ namespace Rebex.Proxy
 							ShowHelp = true;
 							break;
 
-						case "-v":
+						case "-v": // Verbose logging ON
 							if (LogLevel > LogLevel.Verbose)
 								LogLevel = LogLevel.Verbose;
 							break;
 
-						case "-d":
+						case "-d": // Debug logging ON
 							if (LogLevel > LogLevel.Debug)
 								LogLevel = LogLevel.Debug;
 							break;
 
-						case "-I":
-							if (LogLevel > LogLevel.Error)
+						case "-I": // Info logging OFF
+							if (LogLevel == LogLevel.Info)
 								LogLevel = LogLevel.Error;
 							break;
 
