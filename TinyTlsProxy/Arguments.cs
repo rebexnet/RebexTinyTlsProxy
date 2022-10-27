@@ -23,11 +23,11 @@ namespace Rebex.Proxy
 
 		public CertificateChain ServerCertificate { get; private set; }
 
-		public StringBuilder Error { get; private set; }
+		public StringBuilder Errors { get; private set; }
 
 		public Arguments(string[] args)
 		{
-			Error = new StringBuilder();
+			Errors = new StringBuilder();
 
 			// defaults
 			Timeout = 60;
@@ -95,28 +95,28 @@ namespace Rebex.Proxy
 							break;
 
 						default:
-							Error.AppendLine(string.Format("Unknown option: {0}", args[i]));
+							Errors.AppendLine(string.Format("Unknown option: {0}", args[i]));
 							break;
 					}
 				}
 			}
 			catch (ParserException ex)
 			{
-				Error.AppendLine(ex.Message);
+				Errors.AppendLine(ex.Message);
 			}
 			catch (Exception ex)
 			{
-				Error.AppendLine(ex.ToString());
+				Errors.AppendLine(ex.ToString());
 			}
 
 			if (bindings.Count == 0)
 			{
-				Error.AppendLine("No binding specified.");
+				Errors.AppendLine("No binding specified.");
 			}
 
 			if (certificateRequired && ServerCertificate == null)
 			{
-				Error.AppendLine("Certificate option not specified.");
+				Errors.AppendLine("Certificate option not specified.");
 			}
 
 			Bindings = bindings.ToArray();

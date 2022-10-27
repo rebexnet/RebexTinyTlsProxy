@@ -13,15 +13,17 @@ namespace Rebex.Proxy
 			Rebex.Licensing.Key = Environment.GetEnvironmentVariable("REBEX_KEY");
 
 			var config = new Arguments(args);
-			if (config.Error.Length > 0)
+
+			if (config.Errors.Length > 0)
 			{
-				ShowHelp(config.Error.ToString());
+				ShowHelp();
+				ShowErrors(config.Errors.ToString());
 				return;
 			}
 
 			if (config.ShowHelp)
 			{
-				ShowHelp(errors: null);
+				ShowHelp();
 			}
 
 			// register NIST and Brainpool curves
@@ -43,6 +45,7 @@ namespace Rebex.Proxy
 				if (config.Forever)
 				{
 					Console.WriteLine("Proxy started.");
+
 					Thread.Sleep(Timeout.Infinite);
 				}
 				else
@@ -56,7 +59,7 @@ namespace Rebex.Proxy
 			}
 		}
 
-		private static void ShowHelp(string errors)
+		private static void ShowHelp()
 		{
 			string applicationName = AppDomain.CurrentDomain.FriendlyName;
 			Console.WriteLine("=====================================================================");
@@ -106,12 +109,15 @@ namespace Rebex.Proxy
 			Console.WriteLine(" -t timeout      Proxy Timeout in seconds (default is 60 seconds)");
 			Console.WriteLine(" -forever        Run forever");
 			Console.WriteLine();
+		}
 
-			if (!string.IsNullOrEmpty(errors))
-			{
-				Console.WriteLine();
-				Console.WriteLine(errors);
-			}
+		private static void ShowErrors(string errors)
+		{
+			if (string.IsNullOrEmpty(errors))
+				return;
+
+			Console.WriteLine();
+			Console.WriteLine(errors);
 		}
 	}
 }

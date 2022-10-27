@@ -15,8 +15,7 @@ For newer operating systems, consider using the more powerful
 Download the [ZIP file with Tiny TLS Proxy executable](https://www.rebex.net/getfile/1b5074490320473686b2eacfe69c47db/RebexTinyTlsProxy-Binaries-Latest.zip),
 unpack it and run `RebexTinyTlsProxy.exe` to see the full syntax.
 
-The executable depends on [Microsoft .NET Framework 4](https://www.microsoft.com/download/details.aspx?id=17718
-).
+The executable depends on [Microsoft .NET Framework 4](https://www.microsoft.com/download/details.aspx?id=17718).
 
 
 ## Customization
