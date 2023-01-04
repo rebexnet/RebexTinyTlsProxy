@@ -19,10 +19,11 @@
     <EmbeddedResource Include="Resources\TinyTlsProxy.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Rebex.Common.Validator" Version="6.0.8372" />
     <PackageReference Include="Rebex.Elliptic.Castle" Version="1.2.1" />
     <PackageReference Include="Rebex.Elliptic.Curve25519" Version="1.2.1" />
-    <PackageReference Include="Rebex.Tls" Version="6.0.8334" />
-    <PackageReference Include="Rebex.Networking" Version="6.0.8334" />
-    <PackageReference Include="Rebex.Common" Version="6.0.8334" />
+    <PackageReference Include="Rebex.Tls" Version="6.0.8372" />
+    <PackageReference Include="Rebex.Networking" Version="6.0.8372" />
+    <PackageReference Include="Rebex.Common" Version="6.0.8372" />
   </ItemGroup>
 </Project>

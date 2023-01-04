@@ -21,6 +21,8 @@ namespace Rebex.Proxy
 
 		public int Timeout { get; private set; }
 
+		public bool CustomCertificateValidator { get; private set; }
+
 		public CertificateChain ServerCertificate { get; private set; }
 
 		public StringBuilder Errors { get; private set; }
@@ -80,6 +82,10 @@ namespace Rebex.Proxy
 							Forever = true;
 							break;
 
+						case "-validator":
+							CustomCertificateValidator = true;
+							break;
+
 						case "-c":
 							if (++i < args.Length)
 							{
@@ -111,12 +117,12 @@ namespace Rebex.Proxy
 
 			if (bindings.Count == 0)
 			{
-				Errors.AppendLine("No binding specified.");
+				Errors.AppendLine("No CONNECTION_BINDING specified.");
 			}
 
 			if (certificateRequired && ServerCertificate == null)
 			{
-				Errors.AppendLine("Certificate option not specified.");
+				Errors.AppendLine("Certificate option required for TLS on inbound tunnel.");
 			}
 
 			Bindings = bindings.ToArray();
