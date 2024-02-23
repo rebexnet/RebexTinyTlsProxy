@@ -132,19 +132,20 @@ namespace Rebex.Proxy
 			catch { }
 
 			OnClosing?.Invoke(Id);
+
+			Log(LogLevel.Debug, "Tunnel from {0} closed.", InboundEndpoint);
 		}
 
 		public void Start()
 		{
 			if (!IsStopped)
 			{
-				_inbound.BeginReceive(GetReadCallback(_inbound, _outbound, _inForwarder = new ManualResetEventSlim(false)));
-				_outbound.BeginReceive(GetReadCallback(_outbound, _inbound, _outForwarder = new ManualResetEventSlim(false)));
+				_inbound.BeginReceive(GetReadCallback(_inbound, _outbound, "IN --> OUT", _inForwarder = new ManualResetEventSlim(false)));
+				_outbound.BeginReceive(GetReadCallback(_outbound, _inbound, "IN <-- OUT", _outForwarder = new ManualResetEventSlim(false)));
 			}
 		}
 
-
-		private AsyncCallback GetReadCallback(IDataProvider reader, IDataProvider writer, ManualResetEventSlim _forwarderDone)
+		private AsyncCallback GetReadCallback(IDataProvider reader, IDataProvider writer, string direction, ManualResetEventSlim forwarderDone)
 		{
 			AsyncCallback callback = null;
 			callback = ar =>
@@ -156,7 +157,7 @@ namespace Rebex.Proxy
 					if (readCount == 0 || IsStopped)
 						return;
 
-					Log(LogLevel.Debug, "Forwarding {0} bytes.", readCount);
+					Log(LogLevel.Debug, "Forwarding {0} {1} bytes.", direction, readCount);
 
 					writer.Send(reader.Buffer, 0, readCount);
 
@@ -191,6 +192,7 @@ namespace Rebex.Proxy
 					{
 						try { forwarderDone.Set(); }
 						catch { }
+						Log(LogLevel.Debug, "Forwarding {0} finished.", direction);
 						Close(fast: false);
 					}
 				}
@@ -212,7 +214,8 @@ namespace Rebex.Proxy
 			var log = _logger;
 			if (log != null)
 			{
-				log.Write(level, typeof(Tunnel), Id, "INFO", message);
+				try { log.Write(level, typeof(Tunnel), Id, "INFO", message); }
+				catch { }
 			}
 		}
 
