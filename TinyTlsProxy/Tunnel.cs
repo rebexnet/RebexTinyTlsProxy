@@ -189,7 +189,8 @@ namespace Rebex.Proxy
 				{
 					if (close)
 					{
-						_forwarderDone.Set();
+						try { forwarderDone.Set(); }
+						catch { }
 						Close(fast: false);
 					}
 				}
