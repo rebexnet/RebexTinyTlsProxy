@@ -18,7 +18,8 @@ namespace Rebex.Proxy
 		IAsyncResult BeginReceive(AsyncCallback callback);
 		int EndReceive(IAsyncResult ar);
 		void Send(byte[] buffer, int offset, int count);
-		void Close(ManualResetEventSlim forwarder, TimeSpan closeTimeout);
+		void Shutdown();
+		void Close();
 	}
 
 	/// <summary>
@@ -54,15 +55,13 @@ namespace Rebex.Proxy
 			_socket.Send(buffer, offset, count, 0);
 		}
 
-		public void Close(ManualResetEventSlim forwarder, TimeSpan closeTimeout)
+		public void Shutdown()
 		{
-			try
-			{
-				_socket.Shutdown(SocketShutdown.Send);
-				// give forwarder routine chance to finish before closing the socket forcefully
-				forwarder?.Wait(closeTimeout);
-			}
-			catch { }
+			_socket.Shutdown(SocketShutdown.Send);
+		}
+
+		public void Close()
+		{
 			_socket.Close();
 		}
 	}
@@ -201,15 +200,13 @@ namespace Rebex.Proxy
 			_socket.Send(buffer, offset, count, 0);
 		}
 
-		public void Close(ManualResetEventSlim forwarder, TimeSpan closeTimeout)
+		public void Shutdown()
 		{
-			try
-			{
-				_socket.Shutdown(SocketShutdown.Send);
-				// give forwarder routine chance to finish before closing the socket forcefully
-				forwarder?.Wait(closeTimeout);
-			}
-			catch { }
+			_socket.Shutdown(SocketShutdown.Send);
+		}
+
+		public void Close()
+		{
 			_socket.Close();
 		}
 	}

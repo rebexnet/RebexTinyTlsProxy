@@ -54,7 +54,7 @@ namespace Rebex.Proxy
 		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate)
 		{
 			InboundEndpoint = inboundSocket.RemoteEndPoint;
-			
+
 			string insecurity = (Binding.InboundTlsVersions == TlsVersion.None) ? "unsecure" : Binding.InboundTlsVersions.ToString().Replace(" ", "");
 			string outsecurity = (Binding.OutboundTlsVersions == TlsVersion.None) ? "unsecure" : Binding.OutboundTlsVersions.ToString().Replace(" ", "");
 
@@ -107,19 +107,29 @@ namespace Rebex.Proxy
 
 			Log(LogLevel.Info, "Closing tunnel ({0}) --({1})--> ({2}).", InboundEndpoint, Binding.SourcePort, OutboundEndpoint ?? Binding.Target);
 
-			try
+			try { _inbound?.Shutdown(); }
+			catch (Exception ex)
 			{
-				_inbound?.Close(_inForwarder, fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT);
+				Log(LogLevel.Debug, "Error while shutting down inbound tunnel: {0}", ex);
 			}
+
+			try { _outbound?.Shutdown(); }
+			catch (Exception ex)
+			{
+				Log(LogLevel.Debug, "Error while shutting down outbound tunnel: {0}", ex);
+			}
+
+			// give forwarder routine chance to finish before closing the socket forcefully
+			try { _inForwarder?.Wait(fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT); } catch { }
+			try { _outForwarder?.Wait(fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT); } catch { }
+
+			try { _inbound?.Close(); }
 			catch (Exception ex)
 			{
 				Log(LogLevel.Debug, "Error while closing inbound tunnel: {0}", ex);
 			}
 
-			try
-			{
-				_outbound?.Close(_outForwarder, fast ? CLOSE_FAST_TIMEOUT : CLOSE_TIMEOUT);
-			}
+			try { _outbound?.Close(); }
 			catch (Exception ex)
 			{
 				Log(LogLevel.Debug, "Error while closing outbound tunnel: {0}", ex);
@@ -150,6 +160,7 @@ namespace Rebex.Proxy
 			AsyncCallback callback = null;
 			callback = ar =>
 			{
+				bool timeout = false;
 				bool close = true;
 				try
 				{
@@ -165,18 +176,31 @@ namespace Rebex.Proxy
 
 					close = false;
 				}
+				catch (TimeoutException)
+				{
+					if (!IsStopped)
+					{
+						timeout = true;
+					}
+				}
 				catch (SocketException ex)
 				{
-					if (!IsStopped && ex.SocketErrorCode != SocketError.TimedOut)
+					if (!IsStopped)
 					{
-						Log(LogLevel.Error, ex.ToString());
+						if (ex.SocketErrorCode == SocketError.TimedOut)
+							timeout = true;
+						else
+							Log(LogLevel.Error, ex.ToString());
 					}
 				}
 				catch (TlsException ex)
 				{
-					if (!IsStopped && ex.Status != NetworkSessionExceptionStatus.Timeout)
+					if (!IsStopped)
 					{
-						Log(LogLevel.Error, ex.ToString());
+						if (ex.Status == NetworkSessionExceptionStatus.Timeout)
+							timeout = true;
+						else
+							Log(LogLevel.Error, ex.ToString());
 					}
 				}
 				catch (Exception ex)
@@ -188,6 +212,10 @@ namespace Rebex.Proxy
 				}
 				finally
 				{
+					if (timeout)
+					{
+						Log(LogLevel.Info, "Tunnel {0} timed out.", direction);
+					}
 					if (close)
 					{
 						try { forwarderDone.Set(); }
