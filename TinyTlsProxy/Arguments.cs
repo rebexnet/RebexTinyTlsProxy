@@ -70,6 +70,7 @@ namespace Rebex.Proxy
 						case "-noTLS":
 						case "-toTLS":
 						case "-toSMTP":
+						case "-TLStoTLS":
 							var type = args[i];
 							if (++i >= args.Length)
 								break;
@@ -146,36 +147,58 @@ namespace Rebex.Proxy
 
 		private static ProxyBinding GetBinding(string bindingType, string protocols, string binding)
 		{
-			var parts = protocols.Split('-');
-			if (parts.Length != 2)
+			var versions = new TlsVersion[2];
+			var protocolsArray = protocols.Split(':');
+			if (protocolsArray.Length > versions.Length)
 			{
-				throw new ParserException("Invalid protocols ({0}).", protocols);
+				throw new ParserException("Invalid TLS_PROTOCOLS ({0}).", protocols);
 			}
-			TlsVersion versions = GetRange(GetTlsProtocol(parts[0], TlsVersion.TLS10), GetTlsProtocol(parts[1], TlsVersion.TLS13));
+			for (int i = 0; i < protocolsArray.Length; i++)
+			{
+				var parts = protocolsArray[i].Split('-');
+				if (parts.Length != 2)
+				{
+					throw new ParserException("Invalid TLS_PROTOCOLS ({0}).", protocols);
+				}
+				versions[i] = GetRange(GetTlsProtocol(parts[0], TlsVersion.TLS10), GetTlsProtocol(parts[1], TlsVersion.TLS13));
+			}
 
 			BindingType type;
-			TlsVersion inversions, outversions;
+			TlsVersion inVersions, outVersions;
 			switch (bindingType)
 			{
-				case "-fromTLS":
-					type = BindingType.FromTLS; inversions = versions; outversions = TlsVersion.None; break;
 				case "-noTLS":
-					type = BindingType.NoTLS; inversions = TlsVersion.None; outversions = TlsVersion.None; break;
+					type = BindingType.NoTLS; inVersions = TlsVersion.None; outVersions = TlsVersion.None; break;
 				case "-toTLS":
-					type = BindingType.ToTLS; inversions = TlsVersion.None; outversions = versions; break;
+					type = BindingType.ToTLS; inVersions = TlsVersion.None; outVersions = versions[0]; break;
 				case "-toSMTP":
-					type = BindingType.ToSMTP; inversions = TlsVersion.None; outversions = versions; break;
+					type = BindingType.ToSMTP; inVersions = TlsVersion.None; outVersions = versions[0]; break;
+				case "-fromTLS":
+					type = BindingType.FromTLS; inVersions = versions[0]; outVersions = TlsVersion.None; break;
+				case "-TLStoTLS":
+					type = BindingType.TLStoTLS; inVersions = versions[0]; outVersions = versions[1]; break;
 				default:
-					throw new ArgumentException(string.Format("Invalid connection type ({0}).", bindingType));
+					throw new ArgumentException(string.Format("Invalid CONNECTION_TYPE ({0}).", bindingType));
 			}
 
-			parts = binding.Split(':');
-			if (parts.Length != 3)
+			if (type == BindingType.TLStoTLS)
 			{
-				throw new ParserException("Invalid binding ({0}).", binding);
+				if (protocolsArray.Length != 2)
+					throw new ParserException("Invalid TLS_PROTOCOLS ({0}).", protocols);
+			}
+			else
+			{
+				if (protocolsArray.Length != 1)
+					throw new ParserException("Invalid TLS_PROTOCOLS ({0}).", protocols);
 			}
 
-			return new ProxyBinding(type, GetPort(parts[0]), parts[1], GetPort(parts[2]), inversions, outversions);
+			var bindingArray = binding.Split(':');
+			if (bindingArray.Length != 3)
+			{
+				throw new ParserException("Invalid PORT_BINDING ({0}).", binding);
+			}
+
+			return new ProxyBinding(type, GetPort(bindingArray[0]), bindingArray[1], GetPort(bindingArray[2]), inVersions, outVersions);
 		}
 
 		private static TlsVersion GetRange(TlsVersion min, TlsVersion max)

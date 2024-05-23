@@ -11,9 +11,10 @@ namespace Rebex.Proxy
 	public enum BindingType
 	{
 		NoTLS = 0,
-		FromTLS = 1,
-		ToTLS = 2,
-		ToSMTP = 3,
+		TLStoTLS,
+		FromTLS,
+		ToTLS,
+		ToSMTP,
 	}
 
 	/// <summary>
@@ -41,7 +42,7 @@ namespace Rebex.Proxy
 			}
 		}
 
-		public ProxyBinding(BindingType type, int sourcePort, string targetAddress, int targetPort, TlsVersion inversions, TlsVersion outversions)
+		public ProxyBinding(BindingType type, int sourcePort, string targetAddress, int targetPort, TlsVersion inVersions, TlsVersion outVersions)
 		{
 			if (targetAddress == null)
 				throw new ArgumentNullException(nameof(targetAddress));
@@ -49,8 +50,8 @@ namespace Rebex.Proxy
 			BindingType = type;
 			Source = new IPEndPoint(IPAddress.Any, sourcePort);
 			Target = new MyDnsEndPoint(targetAddress, targetPort);
-			InboundTlsVersions = inversions;
-			OutboundTlsVersions = outversions;
+			InboundTlsVersions = inVersions;
+			OutboundTlsVersions = outVersions;
 		}
 
 		public void DisableTls13()

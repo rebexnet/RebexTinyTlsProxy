@@ -4,7 +4,8 @@
 			"commandName": "Project",
 			"commandLineArgs": "-toTLS - 8080:httpbin.org:443 -t 30 -d"
 			//"commandLineArgs": "-toTLS TLS10-TLS12 80:httpbin.org:443 -t 30 -d"
-			//"commandLineArgs": "-fromTLS TLS12-TLS13 443:httpbin.org:80 -c Properties/localhost.pfx -t 30 -d"
+			//"commandLineArgs": "-fromTLS TLS12-TLS13 443:httpbin.org:80 -c localhost.pfx -t 30 -d"
+			//"commandLineArgs": "-TLStoTLS TLS12-:-TLS10 443:httpbin.org:443 -c localhost.pfx -t 30 -d -weak"
 			//"commandLineArgs": "-toSMTP - 587:smtp.office365.com:587 -toTLS - 993:outlook.office365.com:993 -t 30 -d"
 		}
 	}
