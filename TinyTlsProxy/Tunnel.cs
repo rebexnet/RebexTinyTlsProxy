@@ -51,7 +51,7 @@ namespace Rebex.Proxy
 			_cancellation = cancellationToken;
 		}
 
-		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate)
+		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate, bool weak, bool insecure)
 		{
 			InboundEndpoint = inboundSocket.RemoteEndPoint;
 
@@ -69,6 +69,15 @@ namespace Rebex.Proxy
 			inbound.Parameters.Version = Binding.InboundTlsVersions;
 			inbound.Parameters.Entity = TlsConnectionEnd.Server;
 			inbound.Parameters.Certificate = serverCertificate;
+			if (weak)
+			{
+				inbound.Parameters.AllowedSuites |= TlsCipherSuite.Weak;
+			}
+			if (insecure)
+			{
+				inbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
+				inbound.Parameters.AllowVulnerableSuites = true;
+			}
 
 			if (Binding.InboundTlsVersions != TlsVersion.None)
 			{
@@ -84,6 +93,16 @@ namespace Rebex.Proxy
 			outbound.Timeout = timeout;
 			outbound.Parameters.Version = Binding.OutboundTlsVersions;
 			outbound.Parameters.Entity = TlsConnectionEnd.Client;
+			if (weak)
+			{
+				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Weak;
+			}
+			if (insecure)
+			{
+				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
+				outbound.Parameters.AllowVulnerableSuites = true;
+			}
+
 			outbound.Connect(Binding.Target);
 			OutboundEndpoint = _outbound.RemoteEndpoint;
 

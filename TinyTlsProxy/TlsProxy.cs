@@ -31,6 +31,10 @@ namespace Rebex.Proxy
 
 		public int Timeout { get; set; }
 
+		public bool WeakCiphers { get; set; }
+
+		public bool InsecureCiphers { get; set; }
+
 		public CertificateChain ServerCertificate { get; set; }
 
 		public TlsProxy(params ProxyBinding[] bindings)
@@ -228,7 +232,7 @@ namespace Rebex.Proxy
 					}
 				};
 
-				tunnel.Open(inboundSocket, Timeout, ServerCertificate);
+				tunnel.Open(inboundSocket, Timeout, ServerCertificate, WeakCiphers, InsecureCiphers);
 				inboundSocket = null;
 
 				tunnel.Start();

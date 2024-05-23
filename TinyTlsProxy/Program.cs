@@ -51,6 +51,8 @@ namespace Rebex.Proxy
 				proxy.LogWriter = logger; // assign logger
 				proxy.Timeout = config.Timeout * 1000; // set timeout in milliseconds
 				proxy.ServerCertificate = config.ServerCertificate; // assign server certificate
+				proxy.WeakCiphers = config.WeakCiphers;
+				proxy.InsecureCiphers = config.InsecureCiphers;
 
 				Console.WriteLine("Starting TLS proxy...");
 
@@ -122,7 +124,9 @@ namespace Rebex.Proxy
 			Console.WriteLine(" -h              Show this help");
 			Console.WriteLine(" -c path#pass    Certificate path and password (separated by #)");
 			Console.WriteLine(" -t timeout      Proxy Timeout in seconds (default is 60 seconds)");
-			Console.WriteLine(" -validator      Use custom certificate validator");
+			Console.WriteLine(" -validator      Use custom certificate validator (alternative to native validator)");
+			Console.WriteLine(" -weak           WEAK cipher suites are also allowed");
+			Console.WriteLine(" -insecure       INSECURE cipher suites are also allowed");
 			Console.WriteLine(" -forever        Run forever");
 			Console.WriteLine(" -v              Verbose logging ON");
 			Console.WriteLine(" -d              Debug logging ON");

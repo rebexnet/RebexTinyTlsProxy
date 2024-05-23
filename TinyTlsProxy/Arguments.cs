@@ -23,6 +23,10 @@ namespace Rebex.Proxy
 
 		public bool CustomCertificateValidator { get; private set; }
 
+		public bool WeakCiphers { get; private set; }
+
+		public bool InsecureCiphers { get; private set; }
+
 		public CertificateChain ServerCertificate { get; private set; }
 
 		public StringBuilder Errors { get; private set; }
@@ -34,7 +38,6 @@ namespace Rebex.Proxy
 			// defaults
 			Timeout = 60;
 			LogLevel = LogLevel.Info;
-			Forever = false;
 
 			bool certificateRequired = false;
 			var bindings = new List<ProxyBinding>();
@@ -84,6 +87,14 @@ namespace Rebex.Proxy
 
 						case "-validator":
 							CustomCertificateValidator = true;
+							break;
+
+						case "-weak":
+							WeakCiphers = true;
+							break;
+
+						case "-insecure":
+							InsecureCiphers = true;
 							break;
 
 						case "-c":
