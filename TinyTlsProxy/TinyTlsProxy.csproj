@@ -7,7 +7,7 @@
     <RootNamespace>Rebex.TinyTlsProxy</RootNamespace>
     <ApplicationIcon>Resources\TinyTlsProxy.ico</ApplicationIcon>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Product>Rebex Tiny TLS Proxy</Product>
     <Company>Rebex CR, s.r.o.</Company>
     <Description>A minimalist TLS proxy server with TLS 1.2 and TLS 1.3 support. Suitable for legacy operating systems.</Description>
@@ -19,11 +19,11 @@
     <EmbeddedResource Include="Resources\TinyTlsProxy.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Rebex.Common" Version="7.0.8865" />
-    <PackageReference Include="Rebex.Common.Validator" Version="7.0.8865" />
-    <PackageReference Include="Rebex.Networking" Version="7.0.8865" />
-    <PackageReference Include="Rebex.Tls" Version="7.0.8865" />
-    <PackageReference Include="Rebex.Elliptic.Castle" Version="1.2.1" />
-    <PackageReference Include="Rebex.Elliptic.Curve25519" Version="1.2.1" />
+    <PackageReference Include="Rebex.Common" Version="7.0.9083" />
+    <PackageReference Include="Rebex.Common.Validator" Version="7.0.9083" />
+    <PackageReference Include="Rebex.Networking" Version="7.0.9083" />
+    <PackageReference Include="Rebex.Tls" Version="7.0.9083" />
+    <PackageReference Include="Rebex.Elliptic.Castle" Version="1.2.2" />
+    <PackageReference Include="Rebex.Elliptic.Curve25519" Version="1.2.2" />
   </ItemGroup>
 </Project>
