@@ -60,7 +60,7 @@ namespace Rebex.Proxy
 					{
 						case "-h":
 							ShowHelp = true;
-							break;
+							return;
 
 						case "-v": // Verbose logging ON
 							if (LogLevel > LogLevel.Verbose)
@@ -159,7 +159,7 @@ namespace Rebex.Proxy
 
 			if (bindings.Count == 0)
 			{
-				Errors.AppendLine("No CONNECTION_BINDING specified.");
+				Errors.AppendLine("No connection BINDING specified.");
 			}
 
 			if (certificateRequired && ServerCertificate == null)

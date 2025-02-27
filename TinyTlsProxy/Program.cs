@@ -28,6 +28,7 @@ namespace Rebex.Proxy
 			if (config.ShowHelp)
 			{
 				ShowHelp();
+				return;
 			}
 
 			// register NIST and Brainpool curves
@@ -92,7 +93,7 @@ namespace Rebex.Proxy
 			Console.WriteLine("For more information, see https://github.com/rebexnet/RebexTinyTlsProxy");
 			Console.WriteLine();
 			Console.WriteLine();
-			Console.WriteLine("Syntax: {0} CONNECTION_BINDING [OPTIONS]", applicationName);
+			Console.WriteLine("Syntax: {0} BINDING [BINDING [BINDING ...]] [OPTIONS]", applicationName);
 			Console.WriteLine();
 			Console.WriteLine("Examples:");
 			Console.WriteLine(" {0} -fromTLS TLS10-TLS13 4443:httpbin.org:80 -c cert.pfx#password", applicationName);
@@ -104,8 +105,10 @@ namespace Rebex.Proxy
 			Console.WriteLine("Modern client to legacy server:");
 			Console.WriteLine(" {0} -TLStoTLS TLS12-:-TLS10 4443:httpbin.org:443 -c cert.pfx#password", applicationName);
 			Console.WriteLine();
+			Console.WriteLine("Multiple bindings for office365.com (port 143 for IMAP, port 25 for SMTP):");
+			Console.WriteLine(" {0} -toTLS - 143:outlook.office365.com:993 -toSMTP - 25:smtp.office365.com:587", applicationName);
 			Console.WriteLine();
-			Console.WriteLine("Syntax of CONNECTION_BINDING: CONNECTION_TYPE TLS_PROTOCOLS PORT_BINDING");
+			Console.WriteLine("Syntax of connection BINDING: CONNECTION_TYPE TLS_PROTOCOLS PORT_BINDING");
 			Console.WriteLine();
 			Console.WriteLine("'CONNECTION_TYPE' defines inbound and outbound protocols:");
 			Console.WriteLine(" -noTLS          Plain -> Plain");
@@ -131,9 +134,9 @@ namespace Rebex.Proxy
 			Console.WriteLine();
 			Console.WriteLine();
 			Console.WriteLine("Available OPTIONS:");
-			Console.WriteLine(" -h              Show this help");
+			Console.WriteLine(" -h              Show this help and exit");
 			Console.WriteLine(" -c path#pass    Certificate path and password (separated by #)");
-			Console.WriteLine(" -t timeout      Proxy Timeout in seconds (default is 60 seconds)");
+			Console.WriteLine(" -t timeout      Proxy timeout in seconds (default is 60 seconds)");
 			Console.WriteLine(" -validator      Use custom certificate validator (alternative to native validator)");
 			Console.WriteLine(" -vo options     Comma separated list of validation options (server certificate):");
 			Console.WriteLine("                   AcceptAll - do not validate certificate (for testing only !!!)");
