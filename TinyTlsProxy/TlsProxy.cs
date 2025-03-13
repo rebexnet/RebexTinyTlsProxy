@@ -1,5 +1,4 @@
-﻿using Rebex.Security.Certificates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
@@ -18,6 +17,7 @@ namespace Rebex.Proxy
 		private const int MAX_CONNECTIONS = 50;
 
 		private readonly object _sync;
+		private readonly IProxySettings _settings;
 		private readonly ProxyBinding[] _bindings;
 		private readonly Dictionary<int, Socket> _listeners;
 		private readonly Dictionary<int, Tunnel> _tunnels;
@@ -29,23 +29,14 @@ namespace Rebex.Proxy
 
 		public ILogWriter LogWriter { get; set; }
 
-		public int Timeout { get; set; }
-
-		public bool WeakCiphers { get; set; }
-
-		public bool InsecureCiphers { get; set; }
-
-		public CertificateChain ServerCertificate { get; set; }
-
-		public ProxyValidationOptions ValidationOptions { get; set; }
-
-		public TlsProxy(params ProxyBinding[] bindings)
+		public TlsProxy(IProxySettings settings)
 		{
-			if (bindings == null)
-				throw new ArgumentNullException(nameof(bindings));
+			if (settings == null)
+				throw new ArgumentNullException(nameof(settings));
 
 			_sync = new object();
-			_bindings = bindings;
+			_settings = settings;
+			_bindings = settings.Bindings ?? new ProxyBinding[0];
 			_listeners = new Dictionary<int, Socket>();
 			_tunnels = new Dictionary<int, Tunnel>();
 		}
@@ -234,7 +225,7 @@ namespace Rebex.Proxy
 					}
 				};
 
-				tunnel.Open(inboundSocket, Timeout, ServerCertificate, WeakCiphers, InsecureCiphers, ValidationOptions);
+				tunnel.Open(inboundSocket, _settings);
 				inboundSocket = null;
 
 				tunnel.Start();

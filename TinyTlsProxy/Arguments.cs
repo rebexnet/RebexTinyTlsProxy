@@ -15,10 +15,20 @@ namespace Rebex.Proxy
 		IgnoreTimeCheck = 4,
 	}
 
+	public interface IProxySettings
+	{
+		ProxyBinding[] Bindings { get; }
+		int TimeoutMilliseconds { get; }
+		CertificateChain ServerCertificate { get; }
+		bool WeakCiphers { get; }
+		bool InsecureCiphers { get; }
+		ProxyValidationOptions ValidationOptions { get; }
+	}
+
 	/// <summary>
 	/// Simple input argument parser.
 	/// </summary>
-	public class Arguments
+	public class Arguments : IProxySettings
 	{
 		public ProxyBinding[] Bindings { get; private set; }
 
@@ -28,7 +38,7 @@ namespace Rebex.Proxy
 
 		public bool Forever { get; private set; }
 
-		public int Timeout { get; private set; }
+		public int TimeoutMilliseconds { get; private set; }
 
 		public bool CustomCertificateValidator { get; private set; }
 
@@ -47,7 +57,7 @@ namespace Rebex.Proxy
 			Errors = new StringBuilder();
 
 			// defaults
-			Timeout = 60;
+			TimeoutMilliseconds = 60 * 1000;
 			LogLevel = LogLevel.Info;
 
 			bool certificateRequired = false;
@@ -138,7 +148,7 @@ namespace Rebex.Proxy
 						case "-t":
 							if (++i < args.Length)
 							{
-								Timeout = GetTimeout(args[i]);
+								TimeoutMilliseconds = GetTimeout(args[i]) * 1000;
 							}
 							break;
 

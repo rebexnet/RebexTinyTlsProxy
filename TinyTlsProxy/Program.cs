@@ -47,14 +47,9 @@ namespace Rebex.Proxy
 			}
 
 			// initialize proxy
-			using (var proxy = new TlsProxy(config.Bindings))
+			using (var proxy = new TlsProxy(config))
 			{
 				proxy.LogWriter = logger; // assign logger
-				proxy.Timeout = config.Timeout * 1000; // set timeout in milliseconds
-				proxy.ServerCertificate = config.ServerCertificate; // assign server certificate
-				proxy.WeakCiphers = config.WeakCiphers;
-				proxy.InsecureCiphers = config.InsecureCiphers;
-				proxy.ValidationOptions = config.ValidationOptions;
 
 				Console.WriteLine("Starting TLS proxy...");
 

@@ -51,7 +51,7 @@ namespace Rebex.Proxy
 			_cancellation = cancellationToken;
 		}
 
-		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate, bool weak, bool insecure, ProxyValidationOptions options)
+		public void Open(Socket inboundSocket, IProxySettings settings)
 		{
 			InboundEndpoint = inboundSocket.RemoteEndPoint;
 
@@ -65,15 +65,15 @@ namespace Rebex.Proxy
 			_inbound = new TlsSocketDataProvider(inbound, BUFFER_SIZE);
 
 			inbound.LogWriter = _logger.GetSpecific("IN");
-			inbound.Timeout = timeout;
+			inbound.Timeout = settings.TimeoutMilliseconds;
 			inbound.Parameters.Version = Binding.InboundTlsVersions;
 			inbound.Parameters.Entity = TlsConnectionEnd.Server;
-			inbound.Parameters.Certificate = serverCertificate;
-			if (weak)
+			inbound.Parameters.Certificate = settings.ServerCertificate;
+			if (settings.WeakCiphers)
 			{
 				inbound.Parameters.AllowedSuites |= TlsCipherSuite.Weak;
 			}
-			if (insecure)
+			if (settings.InsecureCiphers)
 			{
 				inbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
 				inbound.Parameters.AllowVulnerableSuites = true;
@@ -90,23 +90,23 @@ namespace Rebex.Proxy
 				: (IDataProvider)new TlsSocketDataProvider(outbound, BUFFER_SIZE);
 
 			outbound.LogWriter = _logger.GetSpecific("OUT");
-			outbound.Timeout = timeout;
+			outbound.Timeout = settings.TimeoutMilliseconds;
 			outbound.Parameters.Version = Binding.OutboundTlsVersions;
 			outbound.Parameters.Entity = TlsConnectionEnd.Client;
-			if (weak)
+			if (settings.WeakCiphers)
 			{
 				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Weak;
 			}
-			if (insecure)
+			if (settings.InsecureCiphers)
 			{
 				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
 				outbound.Parameters.AllowVulnerableSuites = true;
 			}
-			if (options != ProxyValidationOptions.None)
+			if (settings.ValidationOptions != ProxyValidationOptions.None)
 			{
 				outbound.ValidatingCertificate += (s, e) =>
 				{
-					if (options.HasFlag(ProxyValidationOptions.AcceptAll))
+					if (settings.ValidationOptions.HasFlag(ProxyValidationOptions.AcceptAll))
 					{
 						LogWithArea(LogLevel.Info, "OUT", $"!!! Skipping certificate validation !!!");
 						e.Accept();
@@ -114,9 +114,9 @@ namespace Rebex.Proxy
 					else
 					{
 						ValidationOptions op = 0;
-						if (options.HasFlag(ProxyValidationOptions.SkipRevCheck))
+						if (settings.ValidationOptions.HasFlag(ProxyValidationOptions.SkipRevCheck))
 							op |= ValidationOptions.SkipRevocationCheck;
-						if (options.HasFlag(ProxyValidationOptions.IgnoreTimeCheck))
+						if (settings.ValidationOptions.HasFlag(ProxyValidationOptions.IgnoreTimeCheck))
 							op |= ValidationOptions.IgnoreTimeNotValid;
 						LogWithArea(LogLevel.Debug, "OUT", $"Applying certificate validation options ({op}).");
 						var r = e.CertificateChain.Validate(e.ServerName, op);
