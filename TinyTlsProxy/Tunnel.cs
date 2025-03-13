@@ -61,6 +61,9 @@ namespace Rebex.Proxy
 			Log(LogLevel.Info,
 				$"Starting tunnel ({InboundEndpoint}) --'{insecurity}'--> ({Binding.SourcePort}) --'{outsecurity}'--> ({Binding.Target}).");
 
+			var sni = settings.SNI;
+			bool preserveSNI = Binding.BindingType == BindingType.TLStoTLS && string.IsNullOrEmpty(sni);
+
 			var inbound = new TlsServerSocket(inboundSocket);
 			_inbound = new TlsSocketDataProvider(inbound, BUFFER_SIZE);
 
@@ -77,6 +80,14 @@ namespace Rebex.Proxy
 			{
 				inbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
 				inbound.Parameters.AllowVulnerableSuites = true;
+			}
+			if (preserveSNI)
+			{
+				inbound.ClientHelloReceived += (s, e) =>
+				{
+					if (!string.IsNullOrEmpty(e.ServerName))
+						sni = e.ServerName;
+				};
 			}
 
 			if (Binding.InboundTlsVersions != TlsVersion.None)
@@ -101,6 +112,10 @@ namespace Rebex.Proxy
 			{
 				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
 				outbound.Parameters.AllowVulnerableSuites = true;
+			}
+			if (!string.IsNullOrEmpty(sni))
+			{
+				outbound.Parameters.CommonName = sni;
 			}
 			if (settings.ValidationOptions != ProxyValidationOptions.None)
 			{

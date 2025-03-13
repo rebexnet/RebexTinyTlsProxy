@@ -134,9 +134,10 @@ namespace Rebex.Proxy
 			Console.WriteLine(" -t timeout      Proxy timeout in seconds (default is 60 seconds)");
 			Console.WriteLine(" -validator      Use custom certificate validator (alternative to native validator)");
 			Console.WriteLine(" -vo options     Comma separated list of validation options (server certificate):");
-			Console.WriteLine("                   AcceptAll - do not validate certificate (for testing only !!!)");
-			Console.WriteLine("                   SkipRevCheck - do not perform revocation check");
-			Console.WriteLine("                   IgnoreTimeCheck - ignore time check errors (expired certificate)");
+			Console.WriteLine("                   AcceptAll = do not validate certificate (for testing only !!!)");
+			Console.WriteLine("                   SkipRevCheck = do not perform revocation check");
+			Console.WriteLine("                   IgnoreTimeCheck = ignore time check errors (expired certificate)");
+			Console.WriteLine(" -SNI name       Server name for outbound TLS tunnel (SNI extension).");
 			Console.WriteLine(" -weak           WEAK cipher suites are also allowed");
 			Console.WriteLine(" -insecure       INSECURE cipher suites are also allowed");
 			Console.WriteLine(" -forever        Run forever");

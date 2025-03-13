@@ -23,6 +23,7 @@ namespace Rebex.Proxy
 		bool WeakCiphers { get; }
 		bool InsecureCiphers { get; }
 		ProxyValidationOptions ValidationOptions { get; }
+		string SNI { get; }
 	}
 
 	/// <summary>
@@ -45,6 +46,8 @@ namespace Rebex.Proxy
 		public bool WeakCiphers { get; private set; }
 
 		public bool InsecureCiphers { get; private set; }
+
+		public string SNI { get; private set; }
 
 		public CertificateChain ServerCertificate { get; private set; }
 
@@ -135,6 +138,15 @@ namespace Rebex.Proxy
 										Errors.AppendLine(string.Format("Unknown validation option: {0}", op));
 									}
 								}
+							}
+							break;
+
+						case "-SNI":
+							if (++i < args.Length)
+							{
+								SNI = args[i];
+								if (SNI.Length == 0)
+									Errors.AppendLine("Option -SNI cannot have an empty value.");
 							}
 							break;
 
