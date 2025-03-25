@@ -53,6 +53,7 @@ namespace Rebex.Proxy
 				proxy.ServerCertificate = config.ServerCertificate; // assign server certificate
 				proxy.WeakCiphers = config.WeakCiphers;
 				proxy.InsecureCiphers = config.InsecureCiphers;
+				proxy.ValidationOptions = config.ValidationOptions;
 
 				Console.WriteLine("Starting TLS proxy...");
 
@@ -134,6 +135,10 @@ namespace Rebex.Proxy
 			Console.WriteLine(" -c path#pass    Certificate path and password (separated by #)");
 			Console.WriteLine(" -t timeout      Proxy Timeout in seconds (default is 60 seconds)");
 			Console.WriteLine(" -validator      Use custom certificate validator (alternative to native validator)");
+			Console.WriteLine(" -vo options     Comma separated list of validation options (server certificate):");
+			Console.WriteLine("                   AcceptAll - do not validate certificate (for testing only !!!)");
+			Console.WriteLine("                   SkipRevCheck - do not perform revocation check");
+			Console.WriteLine("                   IgnoreTimeCheck - ignore time check errors (expired certificate)");
 			Console.WriteLine(" -weak           WEAK cipher suites are also allowed");
 			Console.WriteLine(" -insecure       INSECURE cipher suites are also allowed");
 			Console.WriteLine(" -forever        Run forever");

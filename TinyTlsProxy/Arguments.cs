@@ -6,6 +6,15 @@ using Rebex.Security.Certificates;
 
 namespace Rebex.Proxy
 {
+	[Flags]
+	public enum ProxyValidationOptions
+	{
+		None = 0,
+		AcceptAll = 1,
+		SkipRevCheck = 2,
+		IgnoreTimeCheck = 4,
+	}
+
 	/// <summary>
 	/// Simple input argument parser.
 	/// </summary>
@@ -28,6 +37,8 @@ namespace Rebex.Proxy
 		public bool InsecureCiphers { get; private set; }
 
 		public CertificateChain ServerCertificate { get; private set; }
+
+		public ProxyValidationOptions ValidationOptions { get; private set; }
 
 		public StringBuilder Errors { get; private set; }
 
@@ -96,6 +107,25 @@ namespace Rebex.Proxy
 
 						case "-insecure":
 							InsecureCiphers = true;
+							break;
+
+						case "-vo":
+							if (++i < args.Length)
+							{
+								string[] options = args[i].Split(',');
+								foreach (var op in options)
+								{
+									ProxyValidationOptions option;
+									if (Enum.TryParse(op, out option))
+									{
+										ValidationOptions |= option;
+									}
+									else
+									{
+										Errors.AppendLine(string.Format("Unknown validation option: {0}", op));
+									}
+								}
+							}
 							break;
 
 						case "-c":

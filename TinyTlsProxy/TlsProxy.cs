@@ -37,6 +37,8 @@ namespace Rebex.Proxy
 
 		public CertificateChain ServerCertificate { get; set; }
 
+		public ProxyValidationOptions ValidationOptions { get; set; }
+
 		public TlsProxy(params ProxyBinding[] bindings)
 		{
 			if (bindings == null)
@@ -232,7 +234,7 @@ namespace Rebex.Proxy
 					}
 				};
 
-				tunnel.Open(inboundSocket, Timeout, ServerCertificate, WeakCiphers, InsecureCiphers);
+				tunnel.Open(inboundSocket, Timeout, ServerCertificate, WeakCiphers, InsecureCiphers, ValidationOptions);
 				inboundSocket = null;
 
 				tunnel.Start();

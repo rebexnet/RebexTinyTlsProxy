@@ -51,7 +51,7 @@ namespace Rebex.Proxy
 			_cancellation = cancellationToken;
 		}
 
-		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate, bool weak, bool insecure)
+		public void Open(Socket inboundSocket, int timeout, CertificateChain serverCertificate, bool weak, bool insecure, ProxyValidationOptions options)
 		{
 			InboundEndpoint = inboundSocket.RemoteEndPoint;
 
@@ -101,6 +101,31 @@ namespace Rebex.Proxy
 			{
 				outbound.Parameters.AllowedSuites |= TlsCipherSuite.Vulnerable;
 				outbound.Parameters.AllowVulnerableSuites = true;
+			}
+			if (options != ProxyValidationOptions.None)
+			{
+				outbound.ValidatingCertificate += (s, e) =>
+				{
+					if (options.HasFlag(ProxyValidationOptions.AcceptAll))
+					{
+						LogWithArea(LogLevel.Info, "OUT", $"!!! Skipping certificate validation !!!");
+						e.Accept();
+					}
+					else
+					{
+						ValidationOptions op = 0;
+						if (options.HasFlag(ProxyValidationOptions.SkipRevCheck))
+							op |= ValidationOptions.SkipRevocationCheck;
+						if (options.HasFlag(ProxyValidationOptions.IgnoreTimeCheck))
+							op |= ValidationOptions.IgnoreTimeNotValid;
+						LogWithArea(LogLevel.Debug, "OUT", $"Applying certificate validation options ({op}).");
+						var r = e.CertificateChain.Validate(e.ServerName, op);
+						if (r.Valid)
+							e.Accept();
+						else
+							e.Reject(r.Status);
+					}
+				};
 			}
 
 			outbound.Connect(Binding.Target);
@@ -261,7 +286,16 @@ namespace Rebex.Proxy
 			var log = _logger;
 			if (log != null)
 			{
-				try { log.Write(level, typeof(Tunnel), Id, "INFO", message); }
+				LogWithArea(level, "INFO", message);
+			}
+		}
+
+		private void LogWithArea(LogLevel level, string area, string message)
+		{
+			var log = _logger;
+			if (log != null)
+			{
+				try { log.Write(level, typeof(Tunnel), Id, area, message); }
 				catch { }
 			}
 		}
