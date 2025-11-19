@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+
 using Rebex.Net;
 
 namespace Rebex.Proxy
@@ -12,6 +12,7 @@ namespace Rebex.Proxy
 	/// </summary>
 	public interface IDataProvider
 	{
+		int Timeout { get; set; }
 		byte[] Buffer { get; }
 		EndPoint LocalEndpoint { get; }
 		EndPoint RemoteEndpoint { get; }
@@ -25,19 +26,10 @@ namespace Rebex.Proxy
 	/// <summary>
 	/// TLS-based data provider.
 	/// </summary>
-	public class TlsSocketDataProvider : IDataProvider
+	public class TlsSocketDataProvider : TlsDataProviderBase, IDataProvider
 	{
-		readonly TlsSocket _socket;
-
-		public byte[] Buffer { get; private set; }
-
-		public EndPoint LocalEndpoint { get { return _socket.LocalEndPoint; } }
-		public EndPoint RemoteEndpoint { get { return _socket.RemoteEndPoint; } }
-
-		public TlsSocketDataProvider(TlsSocket socket, int bufferSize)
+		public TlsSocketDataProvider(TlsSocket socket, int bufferSize) : base(socket, bufferSize)
 		{
-			_socket = socket;
-			Buffer = new byte[bufferSize];
 		}
 
 		public IAsyncResult BeginReceive(AsyncCallback callback)
@@ -54,38 +46,19 @@ namespace Rebex.Proxy
 		{
 			_socket.Send(buffer, offset, count, 0);
 		}
-
-		public void Shutdown()
-		{
-			_socket.Shutdown(SocketShutdown.Send);
-		}
-
-		public void Close()
-		{
-			_socket.Close();
-		}
 	}
 
 	/// <summary>
 	/// SMTP-aware data provider.
 	/// </summary>
-	public class SmtpExplicitDataProvider : IDataProvider
+	public class SmtpExplicitDataProvider : TlsDataProviderBase, IDataProvider
 	{
-		readonly TlsSocket _socket;
-
 		readonly StringBuilder _builder;
 		private Exception _error;
 		private int _welcomeLength;
 
-		public byte[] Buffer { get; private set; }
-
-		public EndPoint LocalEndpoint { get { return _socket.LocalEndPoint; } }
-		public EndPoint RemoteEndpoint { get { return _socket.RemoteEndPoint; } }
-
-		public SmtpExplicitDataProvider(TlsSocket socket, int bufferSize)
+		public SmtpExplicitDataProvider(TlsSocket socket, int bufferSize) : base(socket, bufferSize)
 		{
-			_socket = socket;
-			Buffer = new byte[bufferSize];
 			_builder = new StringBuilder();
 		}
 
@@ -198,6 +171,31 @@ namespace Rebex.Proxy
 		public void Send(byte[] buffer, int offset, int count)
 		{
 			_socket.Send(buffer, offset, count, 0);
+		}
+	}
+
+	/// <summary>
+	/// Base class for TLS-based data providers.
+	/// </summary>
+	public abstract class TlsDataProviderBase
+	{
+		protected readonly TlsSocket _socket;
+
+		public byte[] Buffer { get; private set; }
+
+		public EndPoint LocalEndpoint { get { return _socket.LocalEndPoint; } }
+		public EndPoint RemoteEndpoint { get { return _socket.RemoteEndPoint; } }
+
+		public int Timeout
+		{
+			get { return _socket.Timeout; }
+			set { _socket.Timeout = value; }
+		}
+
+		public TlsDataProviderBase(TlsSocket socket, int bufferSize)
+		{
+			_socket = socket;
+			Buffer = new byte[bufferSize];
 		}
 
 		public void Shutdown()

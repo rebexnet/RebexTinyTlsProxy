@@ -22,11 +22,13 @@ namespace Rebex.Proxy
 		private readonly int _id;
 		private readonly CancellationToken _cancellation;
 		private readonly TunnelLogWriter _logger;
+		private readonly int _timeout;
 
 		private IDataProvider _inbound;
 		private IDataProvider _outbound;
 		private ManualResetEventSlim _inForwarder;
 		private ManualResetEventSlim _outForwarder;
+		private Timer _timer;
 		private bool _isClosed;
 
 		private bool IsStopped { get { return _isClosed || _cancellation.IsCancellationRequested; } }
@@ -41,7 +43,7 @@ namespace Rebex.Proxy
 
 		public EndPoint OutboundEndpoint { get; private set; }
 
-		public Tunnel(ProxyBinding binding, ILogWriter logWriter, CancellationToken cancellationToken)
+		public Tunnel(ProxyBinding binding, IProxySettings settings, ILogWriter logWriter, CancellationToken cancellationToken)
 		{
 			Binding = binding ?? throw new ArgumentNullException(nameof(binding));
 
@@ -49,6 +51,7 @@ namespace Rebex.Proxy
 			_id = Interlocked.Increment(ref _nextId);
 			_logger = (logWriter != null) ? new TunnelLogWriter(logWriter, Id) : null;
 			_cancellation = cancellationToken;
+			_timeout = settings.TimeoutMilliseconds;
 		}
 
 		public void Open(Socket inboundSocket, IProxySettings settings)
@@ -166,6 +169,9 @@ namespace Rebex.Proxy
 
 			Log(LogLevel.Info, "Closing tunnel ({0}) --({1})--> ({2}).", InboundEndpoint, Binding.SourcePort, OutboundEndpoint ?? Binding.Target);
 
+			try { _timer?.Dispose(); }
+			catch { }
+
 			try { _inbound?.Shutdown(); }
 			catch (Exception ex)
 			{
@@ -209,9 +215,21 @@ namespace Rebex.Proxy
 		{
 			if (!IsStopped)
 			{
+				_inbound.Timeout = Timeout.Infinite;
+				_outbound.Timeout = Timeout.Infinite;
+				_timer = new Timer(TimerTick, null, _timeout, period: Timeout.Infinite);
 				_inbound.BeginReceive(GetReadCallback(_inbound, _outbound, "IN --> OUT", _inForwarder = new ManualResetEventSlim(false)));
 				_outbound.BeginReceive(GetReadCallback(_outbound, _inbound, "IN <-- OUT", _outForwarder = new ManualResetEventSlim(false)));
 			}
+		}
+
+		private void TimerTick(object state)
+		{
+			if (IsStopped)
+				return;
+
+			Log(LogLevel.Info, "Tunnel timed out.");
+			Close(fast: false);
 		}
 
 		private AsyncCallback GetReadCallback(IDataProvider reader, IDataProvider writer, string direction, ManualResetEventSlim forwarderDone)
@@ -219,13 +237,15 @@ namespace Rebex.Proxy
 			AsyncCallback callback = null;
 			callback = ar =>
 			{
-				bool timeout = false;
 				bool close = true;
 				try
 				{
 					int readCount = reader.EndReceive(ar);
 					if (readCount == 0 || IsStopped)
 						return;
+
+					// data received, reschedule timeout
+					_timer.Change(_timeout, period: Timeout.Infinite);
 
 					Log(LogLevel.Debug, "Forwarding {0} {1} bytes.", direction, readCount);
 
@@ -234,33 +254,6 @@ namespace Rebex.Proxy
 					reader.BeginReceive(callback);
 
 					close = false;
-				}
-				catch (TimeoutException)
-				{
-					if (!IsStopped)
-					{
-						timeout = true;
-					}
-				}
-				catch (SocketException ex)
-				{
-					if (!IsStopped)
-					{
-						if (ex.SocketErrorCode == SocketError.TimedOut)
-							timeout = true;
-						else
-							Log(LogLevel.Error, ex.ToString());
-					}
-				}
-				catch (TlsException ex)
-				{
-					if (!IsStopped)
-					{
-						if (ex.Status == NetworkSessionExceptionStatus.Timeout)
-							timeout = true;
-						else
-							Log(LogLevel.Error, ex.ToString());
-					}
 				}
 				catch (Exception ex)
 				{
@@ -271,10 +264,6 @@ namespace Rebex.Proxy
 				}
 				finally
 				{
-					if (timeout)
-					{
-						Log(LogLevel.Info, "Tunnel {0} timed out.", direction);
-					}
 					if (close)
 					{
 						try { forwarderDone.Set(); }

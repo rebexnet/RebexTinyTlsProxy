@@ -212,7 +212,7 @@ namespace Rebex.Proxy
 			{
 				Log(LogLevel.Debug, "Connection from {0} accepted on {1}.", inboundSocket.RemoteEndPoint, inboundSocket.LocalEndPoint);
 
-				tunnel = new Tunnel(binding, LogWriter, cancellation);
+				tunnel = new Tunnel(binding, _settings, LogWriter, cancellation);
 				tunnelId = tunnel.Id;
 				tunnel.OnClosing = id =>
 				{
